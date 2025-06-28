@@ -2,30 +2,17 @@
 
 async function renderVisitsPage(container) {
     container.innerHTML = `<p>Loading visits...</p>`;
-    const [visits, staff] = await Promise.all([
-        fetchData('visits'),
-        fetchData('staff')
-    ]);
-
-    // Staff ID se naam dhoondhne ke liye ek map banayein
+    const [visits, staff] = await Promise.all([fetchData('visits'), fetchData('staff')]);
     const staffMap = new Map(staff.map(s => [s.id, s.name]));
 
     container.innerHTML = `
         <div class="page-header">
             <h2>Scheduled Visits (${visits.length})</h2>
-            <button onclick="showManualVisitModal(${JSON.stringify(staff)})">Schedule Manual Visit</button>
+            <button onclick='showManualVisitModal(${JSON.stringify(staff)})'>Schedule Manual Visit</button>
         </div>
         <div class="table-container">
             <table>
-                <thead>
-                    <tr>
-                        <th>Party Name</th>
-                        <th>Address</th>
-                        <th>Scheduled For</th>
-                        <th>Assigned To</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
+                <thead><tr><th>Party Name</th><th>Address</th><th>Scheduled For</th><th>Assigned To</th><th>Status</th></tr></thead>
                 <tbody>
                     ${visits.map(visit => `
                         <tr>
@@ -43,14 +30,13 @@ async function renderVisitsPage(container) {
 }
 
 function showManualVisitModal(staffList) {
-    // Yeh function leads page wale function jaisa hi hai, bas 'lead' data nahi hai
     const staffOptions = staffList.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
     const formHTML = `
         <form id="manual-visit-form">
             <div class="input-group"><input type="text" name="party_name" required><label>Party Name</label></div>
             <div class="input-group"><input type="text" name="visit_address" required><label>Visit Address</label></div>
             <div class="input-group"><input type="datetime-local" name="scheduled_for" required><label>Schedule For</label></div>
-            <select name="assigned_to"><option value="">Assign to Staff...</option>${staffOptions}</select>
+            <select name="assigned_to" class="input-group"><option value="">Assign to Staff...</option>${staffOptions}</select>
             <button type="submit">Schedule Visit</button>
         </form>
     `;
@@ -64,10 +50,8 @@ async function handleManualVisitSubmit(e) {
     const visitData = Object.fromEntries(formData.entries());
     try {
         await insertData('visits', visitData);
-        alert('Visit scheduled successfully!');
+        showAlert('Visit scheduled successfully!');
         closeModal();
         navigateTo('visits');
-    } catch (error) {
-        alert('Error scheduling visit: ' + error.message);
-    }
+    } catch (error) { showAlert('Error: ' + error.message, 'error'); }
 }

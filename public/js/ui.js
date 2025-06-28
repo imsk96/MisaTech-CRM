@@ -18,7 +18,7 @@ function renderAppShell() {
         </aside>
         <div class="main-content glass-card">
             <div id="page-content"></div>
-            <div id="modal-container"></div> <!-- Modal ke liye container -->
+            <div id="modal-container"></div>
         </div>
     `;
 
@@ -61,4 +61,14 @@ function renderModal(title, contentHTML) {
 function closeModal() {
     const modalContainer = document.getElementById('modal-container');
     modalContainer.innerHTML = '';
+}
+
+function showAlert(message, type = 'success') {
+    const alertContainer = document.createElement('div');
+    alertContainer.className = `alert-popup ${type}`;
+    alertContainer.textContent = message;
+    document.body.appendChild(alertContainer);
+    setTimeout(() => {
+        alertContainer.remove();
+    }, 4000);
 }

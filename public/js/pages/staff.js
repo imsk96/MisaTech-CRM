@@ -1,3 +1,5 @@
+// public/js/pages/staff.js
+
 async function renderStaffPage(container) {
     container.innerHTML = `<p>Loading staff...</p>`;
     const staff = await fetchData('staff');
@@ -25,14 +27,7 @@ async function renderStaffPage(container) {
 }
 
 function showAddStaffModal() {
-    const formHTML = `
-        <form id="add-staff-form">
-            <div class="input-group"><input type="text" name="name" required><label>Staff Name</label></div>
-            <div class="input-group"><input type="email" name="email"><label>Email (Optional)</label></div>
-            <div class="input-group"><input type="text" name="whatsapp_number"><label>WhatsApp Number (Optional)</label></div>
-            <button type="submit">Save Staff</button>
-        </form>
-    `;
+    const formHTML = `<form id="add-staff-form"><div class="input-group"><input type="text" name="name" required><label>Staff Name</label></div><div class="input-group"><input type="email" name="email"><label>Email (Optional)</label></div><div class="input-group"><input type="text" name="whatsapp_number"><label>WhatsApp Number (Optional)</label></div><button type="submit">Save Staff</button></form>`;
     renderModal('Add New Staff', formHTML);
     document.getElementById('add-staff-form').addEventListener('submit', handleAddStaffSubmit);
 }
@@ -43,9 +38,8 @@ async function handleAddStaffSubmit(e) {
     const staffData = Object.fromEntries(formData.entries());
     try {
         await insertData('staff', staffData);
+        showAlert('Staff added successfully!');
         closeModal();
         navigateTo('staff');
-    } catch (error) {
-        alert('Error adding staff: ' + error.message);
-    }
+    } catch (error) { showAlert('Error: ' + error.message, 'error'); }
 }
