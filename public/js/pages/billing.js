@@ -1,5 +1,4 @@
 // public/js/pages/billing.js
-
 async function renderBillingPage(container) {
     container.innerHTML = `<p>Loading bills...</p>`;
     const bills = await fetchData('billing');
@@ -7,17 +6,12 @@ async function renderBillingPage(container) {
     container.innerHTML = `
         <div class="page-header">
             <h2>Billing Reminders (${bills.length})</h2>
-            <button onclick="alert('Add New Bill form will be shown here.')">Add New Bill</button>
+            <button onclick="showAddBillModal()">Add New Bill</button>
         </div>
         <div class="table-container">
-            <table>
+             <table>
                 <thead>
-                    <tr>
-                        <th>Party Name</th>
-                        <th>Amount</th>
-                        <th>Due Date</th>
-                        <th>Actions</th>
-                    </tr>
+                    <tr><th>Party Name</th><th>Amount</th><th>Due Date</th><th>Actions</th></tr>
                 </thead>
                 <tbody>
                     ${bills.map(bill => `
@@ -35,6 +29,34 @@ async function renderBillingPage(container) {
             </table>
         </div>
     `;
+}
+
+function showAddBillModal() {
+    const formHTML = `
+        <form id="add-bill-form">
+            <div class="input-group"><input type="text" name="party_name" required><label>Party Name</label></div>
+            <div class="input-group"><input type="text" name="bill_number"><label>Bill Number (Optional)</label></div>
+            <div class="input-group"><input type="number" name="amount" required><label>Amount (₹)</label></div>
+            <div class="input-group"><input type="date" name="due_date" required><label>Due Date</label></div>
+            <button type="submit">Save Bill</button>
+        </form>
+    `;
+    renderModal('Add New Bill', formHTML);
+    document.getElementById('add-bill-form').addEventListener('submit', handleAddBillSubmit);
+}
+
+async function handleAddBillSubmit(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const billData = Object.fromEntries(formData.entries());
+    
+    try {
+        await insertData('billing', billData);
+        closeModal();
+        navigateTo('billing');
+    } catch (error) {
+        alert('Error adding bill: ' + error.message);
+    }
 }
 
 function sendWhatsAppReminder(party, amount, dueDate) {

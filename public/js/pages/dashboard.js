@@ -1,31 +1,39 @@
 // public/js/pages/dashboard.js
-
 async function renderDashboardPage(container) {
-    // Purani leads dhoondho jo agle 7 din me delete ho sakti hain
-    // Hum Supabase me Cron Job set karenge jo 30 din se purani leads delete karega
-    const alertDate = new Date();
-    alertDate.setDate(alertDate.getDate() - 23); // 23 din purani = 7 din me delete hogi
+    container.innerHTML = `<p>Loading dashboard...</p>`;
 
-    const { data, error } = await supabase
-        .from('leads')
-        .select('id, created_at')
-        .lt('created_at', alertDate.toISOString());
+    try {
+        const [leads, bills, visits, dispatches] = await Promise.all([
+            fetchData('leads'),
+            fetchData('billing'),
+            fetchData('visits'),
+            fetchData('dispatches')
+        ]);
 
-    let alertHtml = '';
-    if (data && data.length > 0) {
-        alertHtml = `
-            <div class="alert alert-warning">
-                <strong>Data Deletion Alert!</strong> You have ${data.length} leads that are over 3 weeks old and will be deleted soon. Please <a onclick="navigateTo('leads')">go to the Leads page</a> to export your data.
+        const dueBills = bills.filter(b => !b.is_paid).length;
+
+        container.innerHTML = `
+            <div class="page-header"><h2>Dashboard</h2></div>
+            <div class="dashboard-cards">
+                <div class="card" onclick="navigateTo('leads')">
+                    <h3>Total Leads</h3>
+                    <p>${leads.length}</p>
+                </div>
+                <div class="card" onclick="navigateTo('visits')">
+                    <h3>Scheduled Visits</h3>
+                    <p>${visits.length}</p>
+                </div>
+                <div class="card" onclick="navigateTo('dispatches')">
+                    <h3>Pending Dispatches</h3>
+                    <p>${dispatches.filter(d => d.status === 'Pending').length}</p>
+                </div>
+                <div class="card" onclick="navigateTo('billing')">
+                    <h3>Due Bills</h3>
+                    <p>${dueBills}</p>
+                </div>
             </div>
         `;
+    } catch (error) {
+        container.innerHTML = `<p>Error loading dashboard: ${error.message}</p>`;
     }
-
-    container.innerHTML = `
-        <div class="page-header">
-            <h2>Dashboard</h2>
-        </div>
-        ${alertHtml}
-        <p>Welcome to your CRM Dashboard!</p>
-        <p>You can see a summary of your business here. This will be updated with charts and stats in the future.</p>
-    `;
 }
