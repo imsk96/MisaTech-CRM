@@ -5,7 +5,7 @@
 const SUPABASE_URL = 'https://knjtpsygbbtjunethhoj.supabase.co'; // Isko replace karein
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtuanRwc3lnYmJ0anVuZXRoaG9qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMTA0MTMsImV4cCI6MjA2NjY4NjQxM30.ILwWlSbymruyz_UZJXbtqbm6i3dVZNKWV0iqUK-Z4fY'; // Isko replace karein
 
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // --- AUTH FUNCTIONS ---
 async function signUp(email, password, companyName) {
