@@ -1,8 +1,8 @@
 // public/js/pages/leads.js
 
 async function renderLeadsPage(container) {
-    container.innerHTML = `<p>Loading leads...</p>`;
-    // Hum staff ki list bhi fetch karenge taaki modal me dropdown dikha sakein
+    container.innerHTML = `<p>Loading data...</p>`;
+    // Staff list ko bhi fetch karein taaki modals me use kar sakein
     const [leads, staff] = await Promise.all([
         fetchData('leads'),
         fetchData('staff')
@@ -19,9 +19,7 @@ async function renderLeadsPage(container) {
         <div class="table-container">
             <table>
                 <thead>
-                    <tr>
-                        <th>Name</th><th>Mobile</th><th>Product</th><th>Status</th><th>Actions</th>
-                    </tr>
+                    <tr><th>Name</th><th>Mobile</th><th>Product</th><th>Status</th><th>Actions</th></tr>
                 </thead>
                 <tbody>
                     ${leads.map(lead => `
@@ -41,59 +39,64 @@ async function renderLeadsPage(container) {
         </div>
     `;
     
-    document.getElementById('add-manual-lead-btn').addEventListener('click', () => showAddManualLeadModal(staff));
-    
-    document.getElementById('export-leads-btn').addEventListener('click', () => {
-        if(leads.length === 0) {
-            alert("No leads to export!");
-            return;
-        }
-        const leadsToExport = leads.map(l => ({...l.data, status: l.status, received_on: l.created_at}));
-        const csv = Papa.unparse(leadsToExport);
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", `leads-export-${new Date().toISOString().split('T')[0]}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    });
+    document.getElementById('add-manual-lead-btn').addEventListener('click', () => showAddManualLeadModal());
+    document.getElementById('export-leads-btn').addEventListener('click', () => exportLeadsToCSV(leads));
 }
 
-// --- MODAL FUNCTIONS FOR LEADS ---
+function exportLeadsToCSV(leads) {
+    if(leads.length === 0) {
+        alert("No leads to export!");
+        return;
+    }
+    const leadsToExport = leads.map(l => ({...l.data, status: l.status, received_on: l.created_at}));
+    const csv = Papa.unparse(leadsToExport);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `leads-export-${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
 
+// --- MANUAL LEAD FUNCTIONS ---
 function showAddManualLeadModal() {
-    // ... yeh function pichhle version jaisa hi rahega ...
+    const formHTML = `
+        <form id="manual-lead-form">
+            <div class="input-group"><input type="text" name="SENDERNAME" required><label>Name</label></div>
+            <div class="input-group"><input type="text" name="MOB" required><label>Mobile</label></div>
+            <div class="input-group"><input type="text" name="PRODUCT_NAME"><label>Product/Service</label></div>
+            <button type="submit">Save Lead</button>
+        </form>
+    `;
+    renderModal('Add Manual Lead', formHTML);
+    document.getElementById('manual-lead-form').addEventListener('submit', handleManualLeadSubmit);
 }
 
 async function handleManualLeadSubmit(e) {
-    // ... yeh function pichhle version jaisa hi rahega ...
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const leadData = Object.fromEntries(formData.entries());
+    
+    try {
+        await insertData('leads', { data: leadData, status: 'New' });
+        closeModal();
+        navigateTo('leads');
+    } catch (error) {
+        alert('Error adding lead: ' + error.message);
+    }
 }
 
-
-// --- VISIT & DISPATCH SCHEDULING ---
-
+// --- VISIT & DISPATCH SCHEDULING FUNCTIONS ---
 function showScheduleVisitModal(lead, staffList) {
     const staffOptions = staffList.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
     const formHTML = `
         <form id="schedule-visit-form" data-lead-id="${lead.id}">
-            <div class="input-group">
-                <input type="text" name="party_name" value="${lead.data.SENDERNAME || ''}" required>
-                <label>Party Name</label>
-            </div>
-            <div class="input-group">
-                <input type="text" name="visit_address" value="${lead.data.ENQ_CITY || ''}" required>
-                <label>Visit Address</label>
-            </div>
-             <div class="input-group">
-                <input type="datetime-local" name="scheduled_for" required>
-                <label>Schedule For</label>
-            </div>
-            <select name="assigned_to">
-                <option value="">Assign to Staff...</option>
-                ${staffOptions}
-            </select>
+            <div class="input-group"><input type="text" name="party_name" value="${lead.data.SENDERNAME || ''}" required><label>Party Name</label></div>
+            <div class="input-group"><input type="text" name="visit_address" value="${lead.data.ENQ_CITY || ''}" required><label>Visit Address</label></div>
+            <div class="input-group"><input type="datetime-local" name="scheduled_for" required><label>Schedule For</label></div>
+            <select name="assigned_to" class="input-group"><option value="">Assign to Staff...</option>${staffOptions}</select>
             <button type="submit">Schedule Visit</button>
         </form>
     `;
@@ -106,39 +109,26 @@ async function handleScheduleVisitSubmit(e) {
     const form = e.target;
     const formData = new FormData(form);
     const visitData = Object.fromEntries(formData.entries());
-    visitData.lead_id = form.dataset.leadId; // Lead ID ko data me add karein
+    visitData.lead_id = form.dataset.leadId;
 
     try {
         await insertData('visits', visitData);
         alert('Visit scheduled successfully!');
         closeModal();
-        navigateTo('visits'); // Visit page par le jayein
+        navigateTo('visits');
     } catch (error) {
         alert('Error scheduling visit: ' + error.message);
     }
 }
 
 function showScheduleDispatchModal(lead, staffList) {
-    // Note: Iska logic bilkul Visit jaisa hi hai, bas table ka naam alag hai
     const staffOptions = staffList.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
     const formHTML = `
         <form id="schedule-dispatch-form" data-lead-id="${lead.id}">
-            <div class="input-group">
-                <input type="text" name="party_name" value="${lead.data.SENDERNAME || ''}" required>
-                <label>Party Name</label>
-            </div>
-            <div class="input-group">
-                <textarea name="dispatch_details" placeholder="Enter product name, quantity, etc.">${lead.data.PRODUCT_NAME || ''}</textarea>
-                <label>Dispatch Details</label>
-            </div>
-             <div class="input-group">
-                <input type="date" name="scheduled_for" required>
-                <label>Schedule For</label>
-            </div>
-            <select name="assigned_to">
-                <option value="">Assign to Staff...</option>
-                ${staffOptions}
-            </select>
+            <div class="input-group"><input type="text" name="party_name" value="${lead.data.SENDERNAME || ''}" required><label>Party Name</label></div>
+            <div class="input-group"><textarea name="dispatch_details" placeholder="Product, Quantity, etc.">${lead.data.PRODUCT_NAME || ''}</textarea><label>Dispatch Details</label></div>
+            <div class="input-group"><input type="date" name="scheduled_for" required><label>Schedule For</label></div>
+            <select name="assigned_to" class="input-group"><option value="">Assign to Staff...</option>${staffOptions}</select>
             <button type="submit">Schedule Dispatch</button>
         </form>
     `;
@@ -152,15 +142,13 @@ async function handleScheduleDispatchSubmit(e) {
     const formData = new FormData(form);
     let dispatchData = Object.fromEntries(formData.entries());
     dispatchData.lead_id = form.dataset.leadId;
-    
-    // JSON data ko format karein
     dispatchData.dispatch_details = { details: dispatchData.dispatch_details };
 
     try {
         await insertData('dispatches', dispatchData);
         alert('Dispatch scheduled successfully!');
         closeModal();
-        navigateTo('dispatches'); // Dispatch page par le jayein
+        navigateTo('dispatches');
     } catch (error) {
         alert('Error scheduling dispatch: ' + error.message);
     }
