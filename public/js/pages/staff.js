@@ -1,5 +1,4 @@
 // public/js/pages/staff.js
-
 async function renderStaffPage(container) {
     container.innerHTML = `<p>Loading staff...</p>`;
     const staff = await fetchData('staff');
@@ -7,7 +6,7 @@ async function renderStaffPage(container) {
     container.innerHTML = `
         <div class="page-header">
             <h2>Manage Staff (${staff.length})</h2>
-            <button onclick="showAddStaffModal()">Add Staff</button>
+            <button id="add-staff-btn">Add Staff</button>
         </div>
         <div class="table-container">
             <table>
@@ -24,6 +23,7 @@ async function renderStaffPage(container) {
             </table>
         </div>
     `;
+    document.getElementById('add-staff-btn').addEventListener('click', showAddStaffModal);
 }
 
 function showAddStaffModal() {

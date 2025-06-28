@@ -5,6 +5,14 @@ function renderAppShell() {
     appContainer.innerHTML = `
         <aside class="sidebar glass-card">
             <h1>SaaS CRM</h1>
+            <div class="theme-switcher">
+                <span>Light</span>
+                <label class="switch">
+                    <input type="checkbox" id="theme-toggle-checkbox">
+                    <span class="slider round"></span>
+                </label>
+                <span>Dark</span>
+            </div>
             <ul class="nav-menu">
                 <li class="nav-item" data-page="dashboard">Dashboard</li>
                 <li class="nav-item" data-page="leads">Leads</li>
@@ -26,9 +34,33 @@ function renderAppShell() {
 
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', (e) => {
-            const page = e.target.getAttribute('data-page');
-            navigateTo(page);
+            navigateTo(e.target.getAttribute('data-page'));
         });
+    });
+
+    setupThemeToggle();
+}
+
+function setupThemeToggle() {
+    const toggle = document.getElementById('theme-toggle-checkbox');
+    const body = document.body;
+
+    if (localStorage.getItem('theme') === 'light') {
+        body.classList.add('light-theme');
+        toggle.checked = false;
+    } else {
+        body.classList.remove('light-theme');
+        toggle.checked = true;
+    }
+
+    toggle.addEventListener('change', () => {
+        if (!toggle.checked) {
+            body.classList.add('light-theme');
+            localStorage.setItem('theme', 'light');
+        } else {
+            body.classList.remove('light-theme');
+            localStorage.setItem('theme', 'dark');
+        }
     });
 }
 

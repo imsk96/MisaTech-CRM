@@ -8,7 +8,7 @@ async function renderLeadsPage(container) {
         <div class="page-header">
             <h2>Leads (${leads.length})</h2>
             <div>
-                <button id="export-leads-btn" style="margin-right: 10px;">Export to CSV</button>
+                <button id="export-leads-btn">Export to CSV</button>
                 <button id="add-manual-lead-btn">Add Manual Lead</button>
             </div>
         </div>
@@ -51,7 +51,6 @@ function exportLeadsToCSV(leads) {
     document.body.removeChild(link);
 }
 
-// --- MANUAL LEAD MODAL ---
 function showAddManualLeadModal() {
     const formHTML = `<form id="manual-lead-form"><div class="input-group"><input type="text" name="SENDERNAME" required><label>Name</label></div><div class="input-group"><input type="text" name="MOB" required><label>Mobile</label></div><div class="input-group"><input type="text" name="PRODUCT_NAME"><label>Product/Service</label></div><button type="submit">Save Lead</button></form>`;
     renderModal('Add Manual Lead', formHTML);
@@ -70,7 +69,6 @@ async function handleManualLeadSubmit(e) {
     } catch (error) { showAlert('Error: ' + error.message, 'error'); }
 }
 
-// --- VISIT MODAL ---
 function showScheduleVisitModal(lead, staffList) {
     const staffOptions = staffList.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
     const formHTML = `<form id="schedule-visit-form" data-lead-id="${lead.id}"><div class="input-group"><input type="text" name="party_name" value="${lead.data.SENDERNAME || ''}" required><label>Party Name</label></div><div class="input-group"><input type="text" name="visit_address" value="${lead.data.ENQ_CITY || ''}" required><label>Visit Address</label></div><div class="input-group"><input type="datetime-local" name="scheduled_for" required><label>Schedule For</label></div><select name="assigned_to" class="input-group"><option value="">Assign to Staff...</option>${staffOptions}</select><button type="submit">Schedule Visit</button></form>`;
@@ -84,6 +82,7 @@ async function handleScheduleVisitSubmit(e) {
     const formData = new FormData(form);
     const visitData = Object.fromEntries(formData.entries());
     visitData.lead_id = form.dataset.leadId;
+    if (visitData.assigned_to === "") visitData.assigned_to = null;
     try {
         await insertData('visits', visitData);
         showAlert('Visit scheduled successfully!');
@@ -92,7 +91,6 @@ async function handleScheduleVisitSubmit(e) {
     } catch (error) { showAlert('Error: ' + error.message, 'error'); }
 }
 
-// --- DISPATCH MODAL ---
 function showScheduleDispatchModal(lead, staffList) {
     const staffOptions = staffList.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
     const formHTML = `<form id="schedule-dispatch-form" data-lead-id="${lead.id}"><div class="input-group"><input type="text" name="party_name" value="${lead.data.SENDERNAME || ''}" required><label>Party Name</label></div><div class="input-group"><textarea name="dispatch_details" placeholder="Product, Quantity, etc.">${lead.data.PRODUCT_NAME || ''}</textarea></div><div class="input-group"><input type="date" name="scheduled_for" required><label>Schedule For</label></div><select name="assigned_to" class="input-group"><option value="">Assign to Staff...</option>${staffOptions}</select><button type="submit">Schedule Dispatch</button></form>`;
@@ -107,6 +105,7 @@ async function handleScheduleDispatchSubmit(e) {
     let dispatchData = Object.fromEntries(formData.entries());
     dispatchData.lead_id = form.dataset.leadId;
     dispatchData.dispatch_details = { details: dispatchData.dispatch_details };
+    if (dispatchData.assigned_to === "") dispatchData.assigned_to = null;
     try {
         await insertData('dispatches', dispatchData);
         showAlert('Dispatch scheduled successfully!');

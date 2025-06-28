@@ -1,5 +1,4 @@
 // public/js/pages/billing.js
-
 async function renderBillingPage(container) {
     container.innerHTML = `<p>Loading bills...</p>`;
     const bills = await fetchData('billing');
@@ -7,7 +6,7 @@ async function renderBillingPage(container) {
     container.innerHTML = `
         <div class="page-header">
             <h2>Billing Reminders (${bills.length})</h2>
-            <button onclick="showAddBillModal()">Add New Bill</button>
+            <button id="add-bill-btn">Add New Bill</button>
         </div>
         <div class="table-container">
              <table>
@@ -28,6 +27,7 @@ async function renderBillingPage(container) {
             </table>
         </div>
     `;
+    document.getElementById('add-bill-btn').addEventListener('click', showAddBillModal);
 }
 
 function showAddBillModal() {
@@ -49,13 +49,13 @@ async function handleAddBillSubmit(e) {
 }
 
 function sendWhatsAppReminder(party, amount, dueDate) {
-    const message = encodeURIComponent(`Hello ${party}, this is a friendly reminder that your payment of ₹${amount} is due on ${dueDate}. Thank you.`);
+    const message = encodeURIComponent(`Hello ${party},\n\nThis is a friendly reminder regarding your invoice.\n\nAmount: ₹${amount}\nDue Date: ${dueDate}\n\nPlease proceed with the payment at your earliest convenience.\n\nThank you!`);
     const phone = prompt("Please enter the party's WhatsApp number (with country code, e.g., 91xxxxxxxxxx):");
     if (phone) { window.open(`https://wa.me/${phone}?text=${message}`, '_blank'); }
 }
 
 function sendEmailReminder(party, amount, dueDate) {
-    const subject = encodeURIComponent(`Payment Reminder: Bill for ₹${amount}`);
+    const subject = encodeURIComponent(`Payment Reminder: Invoice for ₹${amount}`);
     const body = encodeURIComponent(`Dear ${party},\n\nThis is a friendly reminder that your payment of ₹${amount} is due on ${dueDate}.\n\nPlease let us know if you have any questions.\n\nThank you.`);
     const email = prompt("Please enter the party's email address:");
     if (email) { window.location.href = `mailto:${email}?subject=${subject}&body=${body}`; }
