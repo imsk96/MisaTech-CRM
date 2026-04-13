@@ -12,6 +12,24 @@ export default {
       backdropBlur: {
         xs: '2px',
       },
+      colors: {
+        primary: 'var(--primary)',
+        'primary-hover': 'var(--primary-hover)',
+        'text-color': 'var(--text)',
+      },
+      backgroundColor: {
+        'primary': 'var(--primary)',
+      },
+      textColor: {
+        'primary': 'var(--primary)',
+        'text-color': 'var(--text)',
+      },
+      borderColor: {
+        'primary': 'var(--primary)',
+      },
+      ringColor: {
+        'primary': 'var(--primary)',
+      },
     },
   },
   plugins: [],
