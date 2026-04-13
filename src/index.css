@@ -1,0 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --primary: #3b82f6;
+    --text: #1f2937;
+    --bg-image: none;
+    --bg-opacity: 0.1;
+    --glass-opacity: 0.5;
+    --blur: 8px;
+    --radius: 8px;
+  }
+
+  body {
+    @apply font-sans antialiased;
+    background-color: #f3f4f6;
+    background-image: var(--bg-image);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, var(--bg-opacity));
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .dark body::before {
+    background-color: rgba(0, 0, 0, var(--bg-opacity));
+  }
+
+  .dark {
+    color-scheme: dark;
+  }
+}
+
+@layer components {
+  .glass {
+    background: rgba(255, 255, 255, var(--glass-opacity));
+    backdrop-filter: blur(var(--blur));
+    -webkit-backdrop-filter: blur(var(--blur));
+    border-radius: var(--radius);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .dark .glass {
+    background: rgba(17, 24, 39, var(--glass-opacity));
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-card {
+    @apply glass shadow-xl;
+  }
+
+  .btn-primary {
+    background-color: var(--primary);
+    color: white;
+    border-radius: var(--radius);
+    @apply px-4 py-2 font-medium transition-opacity hover:opacity-90;
+  }
+
+  .text-primary {
+    color: var(--primary);
+  }
+}
