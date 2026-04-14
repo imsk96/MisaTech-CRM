@@ -34,7 +34,6 @@ export default function Signup() {
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
-    // Clear error on change
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }))
   }
 
@@ -44,7 +43,7 @@ export default function Signup() {
 
     setLoading(true)
     try {
-      // Step 1: Create user in Supabase Auth
+      // 1. Sign up user with metadata (database trigger creates company/profile/settings)
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -56,66 +55,32 @@ export default function Signup() {
         },
       })
       if (authError) throw authError
-      if (!authData.user) throw new Error('User creation failed')
+      if (!authData.user) throw new Error('Signup failed')
 
-      const userId = authData.user.id
+      // 2. Wait a moment for the database trigger to complete
+      await new Promise(resolve => setTimeout(resolve, 1500))
 
-      // Step 2: Create company
-      const { data: companyData, error: companyError } = await supabase
-        .from('companies')
-        .insert({ name: formData.companyName })
-        .select('id')
-        .single()
-      if (companyError) throw companyError
-      const companyId = companyData.id
-
-      // Step 3: Create profile (admin)
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: userId,
-          company_id: companyId,
-          email: formData.email,
-          full_name: formData.fullName,
-          role: 'admin',
-        })
-      if (profileError) throw profileError
-
-      // Step 4: Create default settings
-      const { error: settingsError } = await supabase
-        .from('settings')
-        .insert({
-          company_id: companyId,
-          dark_mode: false,
-          background_opacity: 0.1,
-          glass_opacity: 0.5,
-          primary_color: '#3b82f6',
-          text_color: '#1f2937',
-          border_radius: 8,
-          blur_intensity: 8,
-        })
-      if (settingsError) {
-        console.warn('Settings creation failed but continuing:', settingsError)
-        // Not critical, proceed
-      }
-
-      // Step 5: Fetch the newly created profile
-      const { data: profile, error: fetchError } = await supabase
+      // 3. Fetch the profile (created by trigger)
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', userId)
+        .eq('id', authData.user.id)
         .single()
-      if (fetchError) throw fetchError
+      
+      if (profileError) {
+        console.error('Profile fetch error:', profileError)
+        throw new Error('Profile not found. Please try logging in manually.')
+      }
 
-      // Step 6: Update Zustand store
+      // 4. Update Zustand store
       setUser(authData.user)
       setProfile(profile)
 
-      toast.success('Account created successfully! Welcome aboard.')
+      toast.success('Account created successfully!')
       navigate('/dashboard')
     } catch (error) {
       console.error('Signup error:', error)
-      toast.error(error.message || 'Signup failed')
+      toast.error(error.message)
     } finally {
       setLoading(false)
     }
