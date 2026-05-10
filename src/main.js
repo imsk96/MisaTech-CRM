@@ -5,6 +5,9 @@
 import { authManager } from './lib/auth.js';
 import { syncEngine } from './modules/sync.js';
 import { approvalEngine } from './modules/approvals.js';
+import { leadsModule, renderLeadsPage, setupLeadsPage } from './modules/leads.js';
+import { tasksModule, renderTasksPage, setupTasksPage } from './modules/tasks.js';
+import { settingsModule, renderSettingsPage, setupSettingsPage } from './modules/settings.js';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './lib/supabase.js';
 import { STORAGE_KEYS } from './utils/constants.js';
 import { toast } from './utils/helpers.js';
@@ -19,6 +22,9 @@ async function initApp() {
   authManager.init(SUPABASE_URL, SUPABASE_ANON_KEY);
   syncEngine.init(window.supabase);
   approvalEngine.init(window.supabase);
+  leadsModule.init();
+  tasksModule.init();
+  settingsModule.init();
 
   // Check authentication state
   const isAuthenticated = await authManager.checkSession();
@@ -492,8 +498,10 @@ async function loadDashboardStats() {
 }
 
 // Placeholder functions for other pages
-function loadLeads() {
-  document.getElementById('contentArea').innerHTML = '<div class="card"><p>Leads module - Coming soon</p></div>';
+async function loadLeads() {
+  const contentArea = document.getElementById('contentArea');
+  contentArea.innerHTML = renderLeadsPage();
+  await setupLeadsPage();
 }
 
 function loadDispatch() {
@@ -504,8 +512,10 @@ function loadVisit() {
   document.getElementById('contentArea').innerHTML = '<div class="card"><p>Visit module - Coming soon</p></div>';
 }
 
-function loadTask() {
-  document.getElementById('contentArea').innerHTML = '<div class="card"><p>Task module - Coming soon</p></div>';
+async function loadTask() {
+  const contentArea = document.getElementById('contentArea');
+  contentArea.innerHTML = renderTasksPage();
+  await setupTasksPage();
 }
 
 function loadQuotation() {
@@ -545,8 +555,8 @@ async function loadApprovals() {
           </div>
           <div class="payload-preview">${JSON.stringify(payload, null, 2)}</div>
           <div class="approval-actions">
-            <button class="btn btn-success btn-sm" onclick="window.handleApprove('${approval.id}')">✓ Approve</button>
-            <button class="btn btn-danger btn-sm" onclick="window.handleReject('${approval.id}')">✕ Reject</button>
+            <button class="btn btn-success btn-sm" onclick="window.approveAction('${approval.id}')">✓ Approve</button>
+            <button class="btn btn-danger btn-sm" onclick="window.rejectAction('${approval.id}')">✗ Reject</button>
           </div>
         </div>
       `;
@@ -556,38 +566,31 @@ async function loadApprovals() {
   document.getElementById('contentArea').innerHTML = `
     <div class="card">
       <div class="card-header">
-        <h3 class="card-title">Pending Approvals</h3>
+        <h3 class="card-title">Pending Approvals (${approvals.length})</h3>
       </div>
-      ${html}
-    </div>
-  `;
-
-  // Expose handlers globally
-  window.handleApprove = async (id) => {
-    await approvalEngine.approve(id);
-    loadApprovals();
-  };
-
-  window.handleReject = async (id) => {
-    await approvalEngine.reject(id);
-    loadApprovals();
-  };
-}
-
-function loadSettings() {
-  document.getElementById('contentArea').innerHTML = `
-    <div class="card">
-      <div class="card-header">
-        <h3 class="card-title">Integration Settings</h3>
+      <div class="card-body">
+        ${html}
       </div>
-      <div class="integration-status">
-        <div class="status-dot inactive"></div>
-        <span>Google Sheets: Not connected</span>
-      </div>
-      <button class="btn btn-primary">Connect Google Sheets</button>
     </div>
   `;
 }
+
+async function loadSettings() {
+  const contentArea = document.getElementById('contentArea');
+  contentArea.innerHTML = renderSettingsPage();
+  await setupSettingsPage();
+}
+
+// Global approval handlers
+window.approveAction = async (id) => {
+  await approvalEngine.approve(id);
+  loadApprovals();
+};
+
+window.rejectAction = async (id) => {
+  await approvalEngine.reject(id);
+  loadApprovals();
+};
 
 // Initialize app when DOM is ready
 if (document.readyState === 'loading') {
