@@ -7,6 +7,9 @@ import { syncEngine } from './modules/sync.js';
 import { approvalEngine } from './modules/approvals.js';
 import { leadsModule, renderLeadsPage, setupLeadsPage } from './modules/leads.js';
 import { tasksModule, renderTasksPage, setupTasksPage } from './modules/tasks.js';
+import { init as initDispatch, renderDispatchPage, setupDispatchPage } from './modules/dispatch.js';
+import { init as initVisit, renderVisitPage, setupVisitPage } from './modules/visit.js';
+import { init as initQuotation, renderQuotationPage, setupQuotationPage } from './modules/quotation.js';
 import { settingsModule, renderSettingsPage, setupSettingsPage } from './modules/settings.js';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './lib/supabase.js';
 import { STORAGE_KEYS } from './utils/constants.js';
@@ -24,6 +27,9 @@ async function initApp() {
   approvalEngine.init(window.supabase);
   leadsModule.init();
   tasksModule.init();
+  initDispatch();
+  initVisit();
+  initQuotation();
   settingsModule.init();
 
   // Check authentication state
@@ -505,11 +511,15 @@ async function loadLeads() {
 }
 
 function loadDispatch() {
-  document.getElementById('contentArea').innerHTML = '<div class="card"><p>Dispatch module - Coming soon</p></div>';
+  const contentArea = document.getElementById('contentArea');
+  contentArea.innerHTML = renderDispatchPage();
+  setupDispatchPage();
 }
 
 function loadVisit() {
-  document.getElementById('contentArea').innerHTML = '<div class="card"><p>Visit module - Coming soon</p></div>';
+  const contentArea = document.getElementById('contentArea');
+  contentArea.innerHTML = renderVisitPage();
+  setupVisitPage();
 }
 
 async function loadTask() {
@@ -519,7 +529,9 @@ async function loadTask() {
 }
 
 function loadQuotation() {
-  document.getElementById('contentArea').innerHTML = '<div class="card"><p>Quotation module - Coming soon</p></div>';
+  const contentArea = document.getElementById('contentArea');
+  contentArea.innerHTML = renderQuotationPage();
+  setupQuotationPage();
 }
 
 function loadProducts() {
